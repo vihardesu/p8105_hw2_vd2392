@@ -1,0 +1,74 @@
+---
+title: "p8105_hw2_vd2392"
+author: "Vihar Desu"
+output: html_document
+---
+### Setup
+```{r setup}
+library(tidyverse)
+library(ggplot2)
+library(readxl)
+```
+
+### Problem 1: Data Importing and Cleaning
+```{r dataframe}
+df <-
+  read_xlsx(
+    "./data/Trash-Wheel-Collection-Totals-8-6-19.xlsx",
+    sheet = "Mr. Trash Wheel",
+    range = cell_cols("A:N")
+  ) %>%
+  janitor::clean_names() %>%
+  drop_na(dumpster) %>%
+  mutate(sports_balls = round(sports_balls),
+         sports_balls = as.integer(sports_balls))
+head(df, 10)
+```
+
+
+```{r}
+precip_2018_df <-
+  read_xlsx(
+    "./data/Trash-Wheel-Collection-Totals-8-6-19.xlsx",
+    sheet = "2018 Precipitation",
+    skip = 1
+  ) %>%
+  janitor::clean_names() %>%
+  drop_na(month) %>%
+  mutate(year = 2018) %>%
+  relocate(year)
+
+precip_2017_df <-
+  read_xlsx(
+    "./data/Trash-Wheel-Collection-Totals-8-6-19.xlsx",
+    sheet = "2017 Precipitation",
+    skip = 1
+  ) %>%
+  janitor::clean_names() %>%
+  drop_na(month) %>%
+  mutate(year = 2017) %>%
+  relocate(year)
+```
+
+### Combine Datasets
+
+```{r}
+month_df = tibble(month = 1:12,
+                  month_name = month.name)
+
+precip_df = bind_rows(precip_2017_df, precip_2018_df)
+left_join(precip_df, month_df, by = "month")
+head(precip_df, 10)
+
+
+```
+
+* in line writing `r nrow(df)` works like this
+* what is the year, month and how much trash collected
+* with some items that have been counted
+* median: median
+* totals
+
+
+
+
