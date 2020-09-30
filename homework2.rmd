@@ -1,7 +1,9 @@
 ---
 title: "p8105_hw2_vd2392"
 author: "Vihar Desu"
-output: html_document
+output:
+  html_document:
+    df_print: paged
 ---
 ### Setup
 ```{r setup}
@@ -10,9 +12,10 @@ library(ggplot2)
 library(readxl)
 ```
 
-### Problem 1: Data Importing and Cleaning
+### Problem 1
+Here, we read and clean the Mr. Trash Wheel dataset
 ```{r dataframe}
-df <-
+trash_df <-
   read_xlsx(
     "./data/Trash-Wheel-Collection-Totals-8-6-19.xlsx",
     sheet = "Mr. Trash Wheel",
@@ -22,11 +25,12 @@ df <-
   drop_na(dumpster) %>%
   mutate(sports_balls = round(sports_balls),
          sports_balls = as.integer(sports_balls))
-head(df, 10)
+head(trash_df, 10)
 ```
 
-
-```{r}
+### Problem 1 cont.
+Next, we read and clean the precipitation datasets for 2017 and 2018
+```{r clean}
 precip_2018_df <-
   read_xlsx(
     "./data/Trash-Wheel-Collection-Totals-8-6-19.xlsx",
@@ -50,25 +54,97 @@ precip_2017_df <-
   relocate(year)
 ```
 
-### Combine Datasets
-
-```{r}
+### Problem 1 cont.
+Finally, we merge the precipitation datasets using a left join and map the month column to integers
+```{r join}
 month_df = tibble(month = 1:12,
                   month_name = month.name)
-
 precip_df = bind_rows(precip_2017_df, precip_2018_df)
 left_join(precip_df, month_df, by = "month")
-head(precip_df, 10)
-
-
+head(precip_df)
 ```
 
-* in line writing `r nrow(df)` works like this
-* what is the year, month and how much trash collected
-* with some items that have been counted
-* median: median
-* totals
+### Problem 1 cont.
+
+```{r}
+sum(precip_2018_df$total, na.rm=TRUE)
+sports_balls_2017 = 
+  filter(trash_df, year == 2017) %>% 
+  select(sports_balls)
+```
+
+The Mr. Trash Wheels dataset provide an interesting look into the volume and categories of items that people dispose. The trash dataset contains `r nrow(trash_df)`
+entries of garbage disposed between the years `r min(trash_df$year)` and `r max(trash_df$year)`. From the dataset, we observe that a sum of `r sum(trash_df$year)` tons of garbage has been collected, sorted and (to the best of it's ability) categorized into several trash types like sports balls, plastic bottles, chip bags, etc. An example of the types of interesting information we can compute from this dataset include the median number of sports balls collected by Mr. Trash Wheel in 2017, which is `r median(as.numeric(unlist(sports_balls_2017$sports_balls)))`. For our precipitation dataset, we aggregated the precipitation data from 2017 and 2018, where we can see the amount of precipitation in inches. For 2018, as an example, we observed a total of `r sum(precip_2018_df$total, na.rm=TRUE)` of precipitation in inches with monthly measurements. In total, the precipitation dataset contains `r nrow(precip_df)` entries, one for every month of the 2 years.
+
+### Problem 2
+
+```{r}
+
+subway_df = 
+  read_csv(file="./data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv") %>% 
+  janitor::clean_names() %>% 
+  select(line:vending, ada, -exit_only) %>% 
+  mutate(
+    entry = recode(entry, "YES" = 1, "NO" = 0),
+    vending = recode(vending, "YES" = 1, "NO" = 0)
+  )
 
 
+head(subway_df, 100)
+```
 
+The NYC Subway Transit dataset contains information about the all the subway entry and exit points throughout the city of New York. With over `r nrow(subway_df)` entry or exit points into the Transit system, this dataset makes it easy to appreciate just how accessible the city can be. Furthermore, the dataset covers whether or not a certain point in the subway system is available for entry or exit, the exact locations of these points, routes that subway lines take across the city, whether or not they are ADA compliant, etc. In theory, a lot can be done with this dataset, especially if it is binded with geospatial data or time series data of actual trains. You can do everything from finding directions between two subway points and creating a geospatial map of subway paths. The data cleaning process for this data frame involved reading in CSV data, cleaning the names so that they are R-safe, selecting relevant columns and mutating some to be R-compatible for further analysis as well. This dataset is `r nrow(subway_df)` rows by `r ncol(subway_df)` columns. 
+
+
+```{r}
+
+#Distinct name and line
+nrow(distinct(subway_df, line, station_name))
+
+# Ada compliant stations
+ada_compliant_stations = 
+  distinct(subway_df, line, station_name, .keep_all = TRUE) %>% 
+  filter(ada == "TRUE")
+
+#Number of ada compliant stations
+nrow(ada_compliant_stations)
+
+#Number of stations allowing entrance / exit ?
+#Number of those stations that allowing
+```
+
+```{r}
+
+subway_df$route8 <- as.character(subway_df$route8)
+subway_df$route9 <- as.character(subway_df$route9)
+subway_df$route10 <- as.character(subway_df$route10)
+subway_df$route11 <- as.character(subway_df$route11)
+
+cleaned_subway_df = 
+  pivot_longer(
+    subway_df,
+    route1:route11,
+    names_to = "route_number",
+    names_prefix = "route",
+    values_to = "route_name"
+  )
+
+#Unique Stations Serving A
+stations_serving_a =
+  nrow(
+    cleaned_subway_df %>%
+      filter(route_name == "A") %>%
+      distinct(line, station_name, .keep_all = TRUE)
+  )
+
+ada_compliant_stations_serving_a =
+  nrow(
+    cleaned_subway_df %>%
+      filter(route_name == "A", ada == "TRUE") %>%
+      distinct(line, station_name, .keep_all = TRUE)
+  )
+
+ada_compliant_stations_serving_a
+
+```
 
