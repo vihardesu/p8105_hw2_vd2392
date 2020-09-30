@@ -148,3 +148,24 @@ ada_compliant_stations_serving_a
 
 ```
 
+### Problem 3
+
+```{r}
+
+pols_month = read_csv("./data/pols-month.csv") %>% 
+  janitor::clean_names() %>% 
+  mutate(
+    day = mon,
+    month = format(mon,"%B"),
+    year = format(mon,"%y")
+  ) %>% 
+  select(-prez_gop, -prez_gop, -day, -mon)
+
+head(pols_month, 10)
+  
+
+```
+
+
+
+
