@@ -60,7 +60,7 @@ precip_2017_df <-
 ```
 
 Finally, we merge the precipitation datasets using a left join and map the month column to integers.
-```{r join, message=FALSE}
+```{r join, message=FALSE, results=FALSE}
 month_df = tibble(month = 1:12,
                   month_name = month.name)
 precip_df = bind_rows(precip_2017_df, precip_2018_df)
