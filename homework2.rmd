@@ -2,19 +2,19 @@
 title: "p8105_hw2_vd2392"
 author: "Vihar Desu"
 output:
-  html_document:
+  github_document:
     df_print: paged
 ---
-### Setup
-```{r setup}
+
+```{r, setup, echo=FALSE, message=FALSE}
 library(tidyverse)
 library(ggplot2)
 library(readxl)
 ```
 
-### Problem 1
-Here, we read and clean the Mr. Trash Wheel dataset
-```{r dataframe}
+## Problem 1
+Here, we read and clean the Mr. Trash Wheel dataset.
+```{r, trash_data, results="asis"}
 trash_df <-
   read_xlsx(
     "./data/Trash-Wheel-Collection-Totals-8-6-19.xlsx",
@@ -25,11 +25,16 @@ trash_df <-
   drop_na(dumpster) %>%
   mutate(sports_balls = round(sports_balls),
          sports_balls = as.integer(sports_balls))
-head(trash_df, 10)
+
+
 ```
 
-### Problem 1 cont.
-Next, we read and clean the precipitation datasets for 2017 and 2018
+### Trash Wheel Collection Totals (8-6-19)
+```{r, echo=FALSE} 
+knitr::kable(head(trash_df),"simple", caption = "Trash Wheel Collection Totals (8-6-19)")
+```
+
+Next, we read and clean the precipitation datasets for 2017 and 2018.
 ```{r clean}
 precip_2018_df <-
   read_xlsx(
@@ -54,66 +59,69 @@ precip_2017_df <-
   relocate(year)
 ```
 
-### Problem 1 cont.
-Finally, we merge the precipitation datasets using a left join and map the month column to integers
+Finally, we merge the precipitation datasets using a left join and map the month column to integers.
 ```{r join}
 month_df = tibble(month = 1:12,
                   month_name = month.name)
 precip_df = bind_rows(precip_2017_df, precip_2018_df)
 left_join(precip_df, month_df, by = "month")
-head(precip_df)
+
 ```
 
-### Problem 1 cont.
+### Precipitation Data 2017-2018
+```{r, results='asis', echo=FALSE} 
+knitr::kable(head(precip_df),"simple", caption = "Precipitation Data 2017-2018")
+```
 
-```{r}
+```{r, precip_helpers, include=FALSE}
 sum(precip_2018_df$total, na.rm=TRUE)
 sports_balls_2017 = 
   filter(trash_df, year == 2017) %>% 
   select(sports_balls)
 ```
 
-The Mr. Trash Wheels dataset provide an interesting look into the volume and categories of items that people dispose. The trash dataset contains `r nrow(trash_df)`
-entries of garbage disposed between the years `r min(trash_df$year)` and `r max(trash_df$year)`. From the dataset, we observe that a sum of `r sum(trash_df$year)` tons of garbage has been collected, sorted and (to the best of it's ability) categorized into several trash types like sports balls, plastic bottles, chip bags, etc. An example of the types of interesting information we can compute from this dataset include the median number of sports balls collected by Mr. Trash Wheel in 2017, which is `r median(as.numeric(unlist(sports_balls_2017$sports_balls)))`. For our precipitation dataset, we aggregated the precipitation data from 2017 and 2018, where we can see the amount of precipitation in inches. For 2018, as an example, we observed a total of `r sum(precip_2018_df$total, na.rm=TRUE)` of precipitation in inches with monthly measurements. In total, the precipitation dataset contains `r nrow(precip_df)` entries, one for every month of the 2 years.
+#### Problem 1 Summary
+The Mr. Trash Wheels dataset provide an interesting look into the volume and categories of items that people dispose. The trash dataset contains `r nrow(trash_df)` entries of garbage disposed between the years `r min(trash_df$year)` and `r max(trash_df$year)`. From the dataset, we observe that a sum of `r sum(trash_df$year)` tons of garbage has been collected, sorted and (to the best of someone's ability) categorized into several trash types like sports balls, plastic bottles, chip bags, etc. An example of the types of interesting information we can compute from this dataset include the median number of sports balls collected by Mr. Trash Wheel in 2017, which is `r median(as.numeric(unlist(sports_balls_2017$sports_balls)))`. For our precipitation dataset, we aggregated the precipitation data from 2017 and 2018, where we can see the amount of precipitation in inches. For 2018, as an example, we observed a total of `r sum(precip_2018_df$total, na.rm=TRUE)` of precipitation in inches with monthly measurements. In total, the precipitation dataset contains `r nrow(precip_df)` entries, one for every month of the 2 years.
 
-### Problem 2
+## Problem 2
 
-```{r}
-
-subway_df = 
-  read_csv(file="./data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv") %>% 
-  janitor::clean_names() %>% 
-  select(line:vending, ada, -exit_only) %>% 
+```{r, subway_data, message=FALSE}
+subway_df =
+  read_csv(file = "./data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv") %>%
+  janitor::clean_names() %>%
+  select(line:vending, ada,-exit_only) %>%
   mutate(
     entry = recode(entry, "YES" = 1, "NO" = 0),
     vending = recode(vending, "YES" = 1, "NO" = 0)
   )
-
-
-head(subway_df, 100)
 ```
 
-The NYC Subway Transit dataset contains information about the all the subway entry and exit points throughout the city of New York. With over `r nrow(subway_df)` entry or exit points into the Transit system, this dataset makes it easy to appreciate just how accessible the city can be. Furthermore, the dataset covers whether or not a certain point in the subway system is available for entry or exit, the exact locations of these points, routes that subway lines take across the city, whether or not they are ADA compliant, etc. In theory, a lot can be done with this dataset, especially if it is binded with geospatial data or time series data of actual trains. You can do everything from finding directions between two subway points and creating a geospatial map of subway paths. The data cleaning process for this data frame involved reading in CSV data, cleaning the names so that they are R-safe, selecting relevant columns and mutating some to be R-compatible for further analysis as well. This dataset is `r nrow(subway_df)` rows by `r ncol(subway_df)` columns. 
+The NYC Subway Transit dataset contains information about the subway entry and exit points throughout the city of New York. With over `r nrow(subway_df)` entry or exit points into the Transit system, this dataset makes it easy to appreciate just how accessible the city can be. Furthermore, the dataset covers whether or not a certain point in the subway system is available for entry or exit, the exact locations of these points, routes that subway lines take across the city, whether or not they are ADA compliant, etc. You can do everything from finding directions between two subway points and creating a geospatial map of subway paths. The data cleaning process for this data frame involved reading in CSV data, cleaning the names so that they are R-safe, selecting relevant columns and mutating some to be R-compatible for further analysis as well. This dataset is `r nrow(subway_df)` rows by `r ncol(subway_df)` columns. However, it is not tidy yet because we observe superfluous columns that can be melted down to be more succinct with pivot longer call.
 
-
-```{r}
-
-#Distinct name and line
+```{r, subway_analysis, results=FALSE, message=FALSE}
 nrow(distinct(subway_df, line, station_name))
 
-# Ada compliant stations
-ada_compliant_stations = 
-  distinct(subway_df, line, station_name, .keep_all = TRUE) %>% 
+ada_compliant_stations =
+  distinct(subway_df, line, station_name, .keep_all = TRUE) %>%
   filter(ada == "TRUE")
 
-#Number of ada compliant stations
-nrow(ada_compliant_stations)
+entrances_and_exits_without_vending = 
+  read_csv(file = "./data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv") %>%
+  janitor::clean_names() %>%
+  filter(exit_only == "Yes", vending == "NO")
 
-#Number of stations allowing entrance / exit ?
-#Number of those stations that allowing
+entrances_without_vending =
+  select(subway_df, everything()) %>%
+  filter(vending == 0, entry == 1)
+
+proportion = nrow(entrances_without_vending) / nrow(entrances_and_exits_without_vending)
 ```
 
-```{r}
+##### Distinct Stations: `r nrow(distinct(subway_df, line, station_name))`
+##### ADA Compliant Stations: `r nrow(ada_compliant_stations)`
+##### Station Entrances/Exits Without Vending: `r proportion`
+
+```{r, cleaned_subway_df, message=FALSE}
 
 subway_df$route8 <- as.character(subway_df$route8)
 subway_df$route9 <- as.character(subway_df$route9)
@@ -129,6 +137,14 @@ cleaned_subway_df =
     values_to = "route_name"
   )
 
+```
+
+### Subway Entry Data for New York City
+```{r, cleaned_subway_data_view, echo=FALSE} 
+knitr::kable(head(cleaned_subway_df),"simple", label = "Subway Entry Data for New York City")
+```
+
+```{r cleaned_subway_data_calculations}
 #Unique Stations Serving A
 stations_serving_a =
   nrow(
@@ -144,28 +160,98 @@ ada_compliant_stations_serving_a =
       distinct(line, station_name, .keep_all = TRUE)
   )
 
-ada_compliant_stations_serving_a
-
 ```
+##### Distinct Stations Serving A: `r stations_serving_a`
+##### ADA Compliant Stations Serving A: `r ada_compliant_stations_serving_a`
 
 ### Problem 3
-
-```{r}
+```{r pols_month_data, message=FALSE}
+months = array(month.name)
 
 pols_month = read_csv("./data/pols-month.csv") %>% 
   janitor::clean_names() %>% 
-  mutate(
-    day = mon,
-    month = format(mon,"%B"),
-    year = format(mon,"%y")
+  separate(mon, c("year", "month", "day"), "-") %>% 
+  mutate (
+    month = months[as.numeric(month)],
+    prez_gop = as.logical(prez_gop),
+    prez_dem = as.logical(prez_dem),
+    president = (case_when(prez_gop == TRUE ~ "GOP",
+                           prez_dem == TRUE ~ "Democrat"))
   ) %>% 
-  select(-prez_gop, -prez_gop, -day, -mon)
-
-head(pols_month, 10)
-  
-
+  select(
+    year,
+    month,
+    president,
+    everything(),
+    -day,
+    -prez_gop,
+    -prez_dem
+  ) %>% 
+  arrange(year, month)
 ```
 
+### Cleaned Politics by Month Data
+```{r, cleaned_politics_data_view, echo=FALSE} 
+knitr::kable(head(pols_month),"simple")
+```
 
+```{r, snp_unemployment, message=FALSE}
+snp = read_csv("./data/snp.csv") %>% 
+  janitor::clean_names() %>% 
+  separate(date, c("month", "day", "year"), "/") %>%
+  mutate (
+    month = months[as.numeric(month)]
+  ) %>% 
+  select (
+    year,
+    month,
+    close,
+    -day
+  ) %>% 
+  arrange(year, month)
+```
 
+### Cleaned S&P by Month Data
+```{r, cleaned_snp_data_view, echo=FALSE} 
+knitr::kable(head(snp),"simple")
+```
 
+```{r, cleaned_unemployment_data, echo=FALSE,  message=FALSE} 
+unemployment = read_csv("./data/unemployment.csv") %>% 
+  janitor::clean_names() %>% 
+  pivot_longer(
+    jan:dec,
+    names_to="month",
+    values_to="unemployment"
+  ) %>% 
+  mutate (
+    month = months[match(month, tolower(month.abb))],
+    year = as.character(year)
+  ) %>% 
+  arrange(year, month)
+```
+
+### Cleaned Unemployment by Month Data
+```{r, cleaned_unemployment_data_view, echo=FALSE, message=FALSE} 
+knitr::kable(head(unemployment),"simple")
+```
+
+### Tidy, Merged Unemployment, SNP and Pols Data by Months
+```{r, merged_us_data, message=FALSE}
+merged_data = 
+  full_join(
+    pols_month,
+    snp,
+    by = NULL
+  ) %>% 
+  full_join(
+    unemployment,
+    by = NULL
+  )
+```
+
+```{r, merged_us_data_view, echo=FALSE, message=FALSE} 
+knitr::kable(head(merged_data),"simple")
+```
+
+Our final merged dataset is a tidy, cleaned up version of 3 datasets: pols-month, snp and unemployment data. Our final dataset contains data from `r min(merged_data$year)` to `r max(merged_data$year)` With over `r nrow(merged_data)` entries of data for each month between those years, we have many useful pieces of information. Our column size for this dataset is `r ncol(merged_data)`, and it contains a combination of three datasets described below. The pols-month dataset contained the number of representatives, governors, and senators that were republican and the equivalent for democrats. We cleaned the data in the first few steps to cleanly categorize which party held the presidential seat every month for our time frame. The snp dataset contained useful information regarding the closing values of the S&P stock index on the associated date, which in our case was generalized into that specific month. As you can see in the merged data, there is a little gap in the information and they years don't align perfectly. That is true too for the unemployment dataset, which contains the unemployment rate in the United States for various months throughout history.   
